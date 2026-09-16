@@ -22,5 +22,5 @@ window.APP_CONFIG = {
 
   // In locale: 'http://localhost:3001/api'
   // Pubblicato:  'https://tuo-backend.onrender.com/api'
-  API_BASE_URL: 'https://ilregnodeigatti.onrender.comapi',
+  API_BASE_URL: 'https://ilregnodeigatti.onrender.com/api',
 };
