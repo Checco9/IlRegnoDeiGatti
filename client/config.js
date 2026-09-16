@@ -2,7 +2,7 @@
 // (protetta dalla Row Level Security lato database): non è un segreto.
 // Non mettere MAI qui la service_role key o chiavi dell'IA.
 window.APP_CONFIG = {
-  SUPABASE_URL: 'https://xxxxxxxx.supabase.co',
-  SUPABASE_ANON_KEY: 'incolla-qui-la-anon-public-key',
-  API_BASE_URL: 'http://localhost:3001/api',
+  SUPABASE_URL: 'https://ddxoklvzobhnzhbajwov.supabase.co',
+  SUPABASE_ANON_KEY: 'sb_publishable_lsro_8lTPuaNsHQmbYEOWQ_IN92_YjP',
+  API_BASE_URL: 'https://ilregnodeigatti.onrender.com/api',
 };
