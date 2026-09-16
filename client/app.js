@@ -6,6 +6,28 @@
 // al tuo progetto Supabase e al backend locale.
 // =========================================================
 
+// Controllo di configurazione: se config.js contiene ancora i valori
+// segnaposto, il browser fallirebbe con un criptico ERR_NAME_NOT_RESOLVED
+// verso "xxxxxxxx.supabase.co". Meglio dirlo subito e chiaramente.
+(function checkConfig() {
+  const cfg = window.APP_CONFIG || {};
+  const problemi = [];
+  if (!cfg.SUPABASE_URL || cfg.SUPABASE_URL.includes('xxxxxxxx')) problemi.push('SUPABASE_URL');
+  if (!cfg.SUPABASE_ANON_KEY || cfg.SUPABASE_ANON_KEY.includes('incolla-qui')) problemi.push('SUPABASE_ANON_KEY');
+  if (!cfg.API_BASE_URL) problemi.push('API_BASE_URL');
+  if (!problemi.length) return;
+
+  const msg = `Configurazione incompleta in client/config.js: ${problemi.join(', ')}. ` +
+    `Apri quel file e inserisci i valori reali del tuo progetto Supabase e l'indirizzo del backend. ` +
+    `Se il sito è pubblicato, ricorda che config.js va modificato nel repository: ` +
+    `le variabili d'ambiente di Netlify NON finiscono automaticamente in questo file.`;
+  console.error('[config]', msg);
+  document.addEventListener('DOMContentLoaded', () => {
+    document.body.insertAdjacentHTML('afterbegin',
+      `<div style="background:#7a2340;color:#efe3c8;padding:14px 18px;font-family:sans-serif;font-size:14px;line-height:1.5;">⚠️ ${msg}</div>`);
+  });
+})();
+
 // NOTA: il CDN Supabase espone già un oggetto globale "window.supabase",
 // quindi il client va chiamato "supabaseClient" per non sovrascrivere quel namespace.
 const supabaseClient = window.supabase.createClient(

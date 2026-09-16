@@ -644,6 +644,57 @@ Apri l'indirizzo Netlify da qualunque dispositivo: è la stessa identica app
 che avevi in locale, ora raggiungibile da ovunque, installabile come PWA
 (sezione 12) con la sua icona. Il tuo PC può restare spento.
 
+## 14. Risoluzione problemi comuni
+
+### `ERR_NAME_NOT_RESOLVED` verso `xxxxxxxx.supabase.co`
+
+Il browser sta cercando di raggiungere il **valore segnaposto**, quindi
+`client/config.js` non contiene i tuoi dati reali.
+
+Verifica decisiva: apri `https://tuo-sito.netlify.app/config.js` nel
+browser. Vedi esattamente cosa riceve l'app. Se lì c'è `xxxxxxxx`, hai
+trovato il problema.
+
+La confusione tipica è questa — sono **tre cose separate**, non
+comunicano tra loro:
+
+| Dove | Chi lo legge | Cosa contiene |
+|---|---|---|
+| `server/.env` | solo il backend (Render) | tutte e 3 le chiavi, inclusa `service_role` |
+| Variabili d'ambiente Netlify | solo la build, se ne usi una | niente, se non hai uno script che le usa |
+| `client/config.js` | **il browser** | URL Supabase, anon key, indirizzo backend |
+
+Soluzione: apri `client/config.js`, scrivici i valori veri, committa e
+ripubblica. E lascia **vuoto** il "Build command" su Netlify: non serve
+nessuna build, e uno script che genera `config.js` può facilmente
+sovrascrivere quello giusto o fallire in silenzio.
+
+> È normale e sicuro che `SUPABASE_ANON_KEY` finisca su GitHub: è
+> progettata per essere pubblica, protetta dalle Row Level Security.
+> La `service_role` key invece non deve mai stare in `config.js`.
+
+### Ho aggiornato config.js ma il browser usa ancora i valori vecchi
+
+Può essere il service worker che serve una versione in cache. Da questa
+versione `config.js` è escluso dalla cache proprio per evitarlo, ma se hai
+installato l'app prima dell'aggiornamento: apri gli strumenti sviluppatore
+(F12) → **Application** → **Service Workers** → **Unregister**, poi
+ricarica con Ctrl+Shift+R.
+
+### Il login gira a vuoto o il backend non risponde
+
+Su Render (piano gratuito) il servizio va in pausa dopo ~15 minuti di
+inattività: la prima chiamata può metterci 30-60 secondi. Aspetta e
+riprova. Per verificare che il backend sia vivo, apri direttamente
+`https://tuo-backend.onrender.com/api/health`: deve rispondere
+`{"ok":true,...}`.
+
+### Errore CORS nella console
+
+Il backend accetta chiamate solo dall'indirizzo in `CLIENT_ORIGIN`. Su
+Render → Environment → `CLIENT_ORIGIN` deve contenere l'indirizzo Netlify
+esatto, **senza slash finale** (es. `https://gdr-gatti.netlify.app`).
+
 ## Semplificazioni note (per le prossime fasi)
 
 - La "Cronaca" mostra i capitoli riassunti già salvati (quando esisteranno)

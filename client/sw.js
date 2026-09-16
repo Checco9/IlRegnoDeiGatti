@@ -6,18 +6,21 @@
 // serve solo a far apparire l'interfaccia subito, anche con rete lenta.
 // =========================================================
 
-const CACHE_NAME = 'gdr-gatti-shell-v1';
+const CACHE_NAME = 'gdr-gatti-shell-v2';
 const APP_SHELL = [
   './',
   './index.html',
   './styles.css',
   './app.js',
   './audio.js',
-  './config.js',
   './manifest.json',
   './assets/ui/icon-192.png',
   './assets/ui/icon-512.png',
 ];
+// NOTA: config.js è deliberatamente FUORI dalla cache. Contiene gli indirizzi
+// di Supabase e del backend: se finisse in cache, dopo un cambio di
+// configurazione il browser continuerebbe a usare quella vecchia, con errori
+// difficili da capire (es. ERR_NAME_NOT_RESOLVED verso un URL non più valido).
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -43,6 +46,12 @@ self.addEventListener('fetch', (event) => {
   // Mai intercettare le chiamate API o richieste verso altri domini (Supabase,
   // il backend, ecc.): quelle devono sempre passare dalla rete vera.
   if (url.pathname.startsWith('/api/') || url.origin !== self.location.origin) {
+    return;
+  }
+
+  // config.js sempre dalla rete: è il file che dice all'app dove trovare
+  // Supabase e il backend, non deve mai restare "congelato" in cache.
+  if (url.pathname.endsWith('/config.js')) {
     return;
   }
 
