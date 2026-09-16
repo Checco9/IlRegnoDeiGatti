@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Il Regno dei Gatti</title>
+
+<!-- PWA: installabile con icona propria -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#150b1e">
+<link rel="icon" href="assets/ui/icon-192.png">
+<link rel="apple-touch-icon" href="assets/ui/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Regno dei Gatti">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Crimson+Pro:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- ============ AUTENTICAZIONE ============ -->
+  <section id="screen-auth" class="screen active">
+    <div class="center-column">
+      <div class="royal-card">
+        <h2><span class="crown-mark">♛</span> Il Regno dei Gatti</h2>
+        <div id="auth-alert"></div>
+        <div class="field">
+          <label for="auth-email">Email</label>
+          <input type="email" id="auth-email" autocomplete="email">
+        </div>
+        <div class="field">
+          <label for="auth-password">Password</label>
+          <input type="password" id="auth-password" autocomplete="current-password">
+        </div>
+        <div style="display:flex; gap:10px; margin-top:6px;">
+          <button class="btn btn-primary" id="btn-login">Entra a corte</button>
+          <button class="btn" id="btn-signup">Registrati</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ HOME ============ -->
+  <section id="screen-home" class="screen">
+    <header class="crest-header">
+      <h1><span class="crown-mark">♛</span> Il Regno dei Gatti</h1>
+      <button class="btn-quiet" id="btn-logout">Esci</button>
+    </header>
+    <div class="crest-rule"></div>
+    <div class="center-column" style="padding-top:0;">
+      <div class="home-menu">
+        <button class="btn" id="btn-nav-new-adventure">🐾 Nuova avventura</button>
+        <button class="btn" id="btn-nav-continue">📖 Continua avventura</button>
+        <button class="btn" id="btn-nav-characters">🐱 Personaggi</button>
+      </div>
+      <div id="home-games-section" style="display:none;">
+        <div class="royal-card">
+          <h2>Le tue avventure</h2>
+          <div class="game-list" id="game-list"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PERSONAGGI ============ -->
+  <section id="screen-characters" class="screen">
+    <header class="crest-header">
+      <h1>🐱 I tuoi gatti</h1>
+      <button class="btn-quiet" id="btn-characters-back">← Torna alla corte</button>
+    </header>
+    <div class="crest-rule"></div>
+    <div class="center-column" style="padding-top:0;">
+      <div class="royal-card">
+        <h2>Gatti già creati</h2>
+        <span class="field-hint">Clicca su un gatto per modificarlo.</span>
+        <div class="game-list" id="character-list"></div>
+      </div>
+      <div class="royal-card">
+        <h2 id="character-form-title">Crea un nuovo gatto</h2>
+        <div id="char-alert"></div>
+        <div class="field">
+          <label for="char-name">Nome</label>
+          <input type="text" id="char-name" placeholder="Milo">
+        </div>
+        <div class="field">
+          <label for="char-avatar">Immagine (URL, facoltativa)</label>
+          <input type="text" id="char-avatar" placeholder="assets/cats/milo.png">
+          <span class="field-hint">Se vuota, in scena comparirà un medaglione con l'iniziale del nome.</span>
+        </div>
+        <div class="field">
+          <label for="char-desc">Descrizione</label>
+          <textarea id="char-desc" placeholder="Un gatto arancione con un solo orecchio piegato."></textarea>
+        </div>
+        <div class="field">
+          <label for="char-personality">Personalità</label>
+          <textarea id="char-personality" placeholder="Coraggioso ma facilmente distratto dal cibo."></textarea>
+        </div>
+        <div class="field">
+          <label for="char-class">Classe</label>
+          <select id="char-class">
+            <option>Guerriero</option>
+            <option>Ladro</option>
+            <option>Mago</option>
+            <option>Paladino</option>
+            <option>Bardo</option>
+            <option selected>Esploratore</option>
+            <option>Gatto Pigro</option>
+            <option>Divoratore</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Statistiche (0–3)</label>
+          <div class="stat-row"><label>Forza</label><input type="range" min="0" max="3" value="1" id="stat-forza"><span class="stat-value" id="stat-forza-val">1</span></div>
+          <div class="stat-row"><label>Agilità</label><input type="range" min="0" max="3" value="1" id="stat-agilita"><span class="stat-value" id="stat-agilita-val">1</span></div>
+          <div class="stat-row"><label>Astuzia</label><input type="range" min="0" max="3" value="1" id="stat-astuzia"><span class="stat-value" id="stat-astuzia-val">1</span></div>
+          <div class="stat-row"><label>Coraggio</label><input type="range" min="0" max="3" value="1" id="stat-coraggio"><span class="stat-value" id="stat-coraggio-val">1</span></div>
+        </div>
+        <div class="field">
+          <label for="char-hp">HP</label>
+          <input type="text" id="char-hp" value="20">
+        </div>
+        <div class="field">
+          <label for="char-energy">Energia massima</label>
+          <input type="text" id="char-energy" value="10">
+          <span class="field-hint">Suggerita in base alla classe, ma modificabile liberamente.</span>
+        </div>
+
+        <div class="field">
+          <label>Aspetto (facoltativo, senza immagine)</label>
+          <span class="field-hint">Se metti un'immagine sopra, questa personalizzazione non viene mostrata: serve come alternativa leggera quando non hai un ritratto.</span>
+          <div class="appearance-row">
+            <div class="appearance-preview"><span class="medallion" id="char-appearance-preview" style="width:56px;height:56px;font-size:1.4rem;"></span></div>
+            <div class="appearance-selects">
+              <select id="char-fur">
+                <option value="arancione">Pelo arancione</option>
+                <option value="nero">Pelo nero</option>
+                <option value="bianco">Pelo bianco</option>
+                <option value="grigio">Pelo grigio</option>
+                <option value="soriano">Pelo soriano</option>
+                <option value="calico">Pelo calico</option>
+              </select>
+              <select id="char-eyes">
+                <option value="verde">Occhi verdi</option>
+                <option value="blu">Occhi blu</option>
+                <option value="ambra">Occhi ambra</option>
+                <option value="giallo">Occhi gialli</option>
+                <option value="eterocromia">Eterocromia</option>
+              </select>
+              <select id="char-clothes">
+                <option value="nessuno">Nessun vestito</option>
+                <option value="armatura">Armatura di cuoio</option>
+                <option value="mantello">Mantello</option>
+                <option value="pirata">Giubbotto da pirata</option>
+                <option value="tunica">Tunica regale</option>
+              </select>
+              <select id="char-weapon">
+                <option value="nessuno">Nessuna arma</option>
+                <option value="spada">Spada</option>
+                <option value="pugnale">Pugnale</option>
+                <option value="bastone">Bastone magico</option>
+                <option value="arco">Arco</option>
+              </select>
+              <select id="char-accessory">
+                <option value="nessuno">Nessun accessorio</option>
+                <option value="campanellino">Campanellino</option>
+                <option value="benda">Benda sull'occhio</option>
+                <option value="cappello">Cappello</option>
+                <option value="mantellina">Mantellina regale</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:10px;">
+          <button class="btn btn-primary" id="btn-save-character">Salva personaggio</button>
+          <button class="btn-quiet" id="btn-cancel-edit-character" style="display:none;">✕ Annulla modifica</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ WIZARD NUOVA AVVENTURA ============ -->
+  <section id="screen-wizard" class="screen">
+    <header class="crest-header">
+      <h1>🐾 Nuova avventura</h1>
+      <button class="btn-quiet" id="btn-wizard-back">← Annulla</button>
+    </header>
+    <div class="crest-rule"></div>
+    <div class="center-column" style="padding-top:0;">
+      <div class="royal-card">
+        <div class="wizard-steps">
+          <div class="wizard-dot done" id="wdot-1"></div>
+          <div class="wizard-dot" id="wdot-2"></div>
+          <div class="wizard-dot" id="wdot-3"></div>
+        </div>
+
+        <div id="wizard-step-1">
+          <h2>Come si chiama l'avventura?</h2>
+          <div class="field">
+            <input type="text" id="wizard-title" placeholder="Il mistero del Pesce Reale">
+          </div>
+          <button class="btn btn-primary" id="btn-wizard-next-1">Avanti</button>
+        </div>
+
+        <div id="wizard-step-2" style="display:none;">
+          <h2>Che tipo di avventura volete?</h2>
+          <div class="tone-grid" id="tone-grid">
+            <div class="tone-option" data-tone="comica">Comica</div>
+            <div class="tone-option" data-tone="avventurosa">Avventurosa</div>
+            <div class="tone-option" data-tone="misteriosa">Misteriosa</div>
+            <div class="tone-option" data-tone="assurda">Assurda</div>
+            <div class="tone-option" data-tone="epica">Epica</div>
+          </div>
+          <div style="display:flex; gap:10px; margin-top:18px;">
+            <button class="btn" id="btn-wizard-back-2">Indietro</button>
+            <button class="btn btn-primary" id="btn-wizard-next-2">Avanti</button>
+          </div>
+        </div>
+
+        <div id="wizard-step-3" style="display:none;">
+          <h2>Chi sono i vostri gatti?</h2>
+          <div class="char-pick-list" id="wizard-char-list"></div>
+          <div style="display:flex; gap:10px; margin-top:18px;">
+            <button class="btn" id="btn-wizard-back-3">Indietro</button>
+            <button class="btn btn-primary" id="btn-wizard-start">Inizia avventura</button>
+          </div>
+        </div>
+        <div id="wizard-alert"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SCHERMATA DI GIOCO ============ -->
+  <section id="screen-game" class="screen">
+    <header class="crest-header">
+      <h1 id="game-title"><span class="crown-mark">♛</span> Avventura</h1>
+      <span class="fame-badge" id="fame-badge" title="Fama del gruppo: sale o scende in base alle vostre azioni, e può aprirvi o chiudervi delle porte.">🏆 <span id="fame-value">0</span></span>
+      <button class="btn-quiet" id="btn-game-back">← Corte</button>
+    </header>
+    <div class="game-toolbar">
+      <button class="btn" id="btn-open-map">🗺️ Mappa</button>
+      <button class="btn" id="btn-toggle-minimap">🧭 Minimappa</button>
+      <button class="btn" id="btn-open-configure">⚙️ Configura</button>
+      <button class="btn" id="btn-open-dashboard">📊 Dashboard</button>
+      <button class="btn" id="btn-open-inventory">🎒 Sacca</button>
+      <button class="btn" id="btn-open-chronicle">📖 Cronaca</button>
+      <button class="btn" id="btn-copy-state">📋 Copia stato</button>
+      <button class="btn" id="btn-copy-instructions">🎓 Istruisci l'IA</button>
+      <button class="btn" id="btn-open-audio">🔊 Suoni</button>
+    </div>
+
+    <!-- ---- minimappa: pannello richiudibile, non tattico ---- -->
+    <div class="minimap-panel" id="minimap-panel" style="display:none;">
+      <div class="minimap-current">👑 <span id="minimap-current-name">—</span></div>
+      <div class="minimap-connections" id="minimap-connections"></div>
+      <div class="minimap-others" id="minimap-others"></div>
+    </div>
+
+    <!-- ---- scena visiva: sfondo del luogo + personaggi/NPC presenti ---- -->
+    <div class="scene-stage" id="scene-stage">
+      <div class="scene-location-label" id="scene-location-label"></div>
+      <div class="scene-figures" id="scene-figures"></div>
+      <div id="scene-event-overlay-layer"></div>
+    </div>
+    <div class="scene-info-panel" id="scene-info-panel" style="display:none;"></div>
+
+    <div class="story-frame">
+      <div class="story-parchment" id="story-parchment">
+        <div class="spinner-line">Il sipario si apre...</div>
+      </div>
+    </div>
+
+    <div class="roster-strip" id="roster-strip"></div>
+
+    <!-- ---- azione + tiro + copia per IA ---- -->
+    <div class="action-panel">
+      <div id="action-alert"></div>
+      <div class="field">
+        <label for="action-input">Cosa fate? (facoltativo se tirate e basta)</label>
+        <textarea id="action-input" placeholder='"Provo ad aprire la porta." — oppure lascia vuoto e tira solo il dado'></textarea>
+      </div>
+
+      <div class="roll-row">
+        <div class="dice-widget">
+          <div class="d20-shape" id="d20-shape"><span id="d20-number">20</span></div>
+          <div class="roll-outcome-label" id="roll-outcome-label"></div>
+        </div>
+        <div id="roll-controls" class="roll-controls">
+          <select id="roll-character"></select>
+          <select id="roll-stat">
+            <option value="forza">Forza</option>
+            <option value="agilita">Agilità</option>
+            <option value="astuzia">Astuzia</option>
+            <option value="coraggio">Coraggio</option>
+          </select>
+          <select id="roll-difficulty">
+            <option value="facile">Facile</option>
+            <option value="normale" selected>Normale</option>
+            <option value="difficile">Difficile</option>
+            <option value="estremo">Estremo</option>
+          </select>
+          <button class="btn" id="btn-roll-dice">🎲 Tira il dado</button>
+        </div>
+        <div id="roll-result" class="roll-result"></div>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end;">
+        <button class="btn btn-primary" id="btn-copy-prompt">📋 Copia per l'IA</button>
+      </div>
+    </div>
+
+    <!-- ---- importa risposta dell'IA ---- -->
+    <div class="import-panel">
+      <button class="btn-quiet" id="btn-toggle-import">📥 Incolla la risposta della tua IA</button>
+      <div id="import-body" style="display:none;">
+        <div class="field">
+          <textarea id="import-textarea" placeholder="Incolla qui l'intera risposta dell'IA (NARRAZIONE + MODIFICHE DA APPLICARE)."></textarea>
+        </div>
+        <button class="btn btn-primary" id="btn-analyze-import">Analizza</button>
+        <div id="import-preview"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ============ MODALI ============ -->
+<div class="modal-overlay" id="modal-map">
+  <div class="modal-box modal-box-wide">
+    <h2>🗺️ Mappa del Regno</h2>
+    <p class="field-hint">Trascina un nodo per spostarlo, trascina lo sfondo per scorrere, rotellina/pizzico per zoomare. Clicca un luogo per i dettagli.</p>
+    <div class="map-canvas-wrapper" id="map-canvas-wrapper">
+      <svg id="map-svg" xmlns="http://www.w3.org/2000/svg">
+        <g id="map-viewport">
+          <g id="map-edges"></g>
+          <g id="map-nodes"></g>
+        </g>
+      </svg>
+      <div class="map-node-info" id="map-node-info" style="display:none;"></div>
+      <div class="map-zoom-controls">
+        <button class="btn-quiet" id="btn-map-zoom-in">➕</button>
+        <button class="btn-quiet" id="btn-map-zoom-out">➖</button>
+        <button class="btn-quiet" id="btn-map-zoom-reset">⤢</button>
+      </div>
+    </div>
+    <p class="field-hint">Per creare, rinominare o collegare i luoghi usa ⚙️ Configura.</p>
+    <div class="modal-close-row"><button class="btn" data-close-modal="modal-map">Chiudi</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-configure">
+  <div class="modal-box modal-box-wide">
+    <h2>⚙️ Configura l'avventura</h2>
+    <div class="config-tabs">
+      <button class="btn config-tab active" id="config-tab-locations">📍 Location</button>
+      <button class="btn config-tab" id="config-tab-npcs">🐾 NPC</button>
+    </div>
+
+    <!-- ---- scheda LOCATION ---- -->
+    <div id="config-panel-locations">
+      <div class="royal-card">
+        <h2 style="font-size:0.95rem;">Location esistenti</h2>
+        <span class="field-hint">Clicca su una location per modificarla.</span>
+        <div class="game-list" id="config-location-list"></div>
+      </div>
+      <div class="royal-card">
+        <h2 id="config-location-form-title" style="font-size:0.95rem;">+ Nuova location</h2>
+        <div id="config-location-alert"></div>
+        <div class="field">
+          <label for="config-loc-name">Nome</label>
+          <input type="text" id="config-loc-name" placeholder="Villaggio dei Gatti">
+        </div>
+        <div class="field">
+          <label for="config-loc-slug">ID interno (facoltativo)</label>
+          <input type="text" id="config-loc-slug" placeholder="generato automaticamente, es. villaggio_dei_gatti">
+          <span class="field-hint">Stabile anche se cambi il nome: è quello che l'IA può usare per riferirsi a questo luogo.</span>
+        </div>
+        <div class="field">
+          <label for="config-loc-desc">Descrizione</label>
+          <textarea id="config-loc-desc"></textarea>
+        </div>
+        <div class="field">
+          <label for="config-loc-image">Immagine di sfondo (URL)</label>
+          <input type="text" id="config-loc-image" placeholder="assets/locations/villaggio.jpg">
+        </div>
+        <div class="field">
+          <label for="config-loc-music">Musica/ambiente (URL, facoltativo)</label>
+          <input type="text" id="config-loc-music" placeholder="assets/music/villaggio.mp3">
+        </div>
+        <div class="field" id="config-loc-connect-field">
+          <label for="config-loc-connect">Collega a (solo alla creazione)</label>
+          <select id="config-loc-connect"><option value="">— nessun collegamento —</option></select>
+        </div>
+        <div class="field" id="config-loc-connect-existing-field" style="display:none;">
+          <label for="config-loc-connect-existing">Collega a un altro luogo già esistente</label>
+          <div style="display:flex; gap:8px;">
+            <select id="config-loc-connect-existing" style="flex:1;"></select>
+            <button class="btn-quiet" id="btn-connect-existing-location">🔗 Collega</button>
+          </div>
+        </div>
+        <div class="field">
+          <label><input type="checkbox" id="config-loc-discovered" checked> Già scoperto</label>
+        </div>
+        <div class="field">
+          <label for="config-loc-minfame">Fama minima per accedere (facoltativa)</label>
+          <input type="text" id="config-loc-minfame" placeholder="es. 20 — lascia vuoto per nessuna restrizione">
+          <span class="field-hint">Se il gruppo ha meno fama di questa soglia, "🐾 Vai qui" resta bloccato su mappa e minimappa.</span>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn btn-primary" id="btn-save-config-location">Salva location</button>
+          <button class="btn-quiet" id="btn-cancel-config-location" style="display:none;">✕ Annulla modifica</button>
+          <button class="btn-quiet" id="btn-delete-config-location" style="display:none; color:var(--wine-bright);">🗑️ Elimina</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ---- scheda NPC ---- -->
+    <div id="config-panel-npcs" style="display:none;">
+      <div class="royal-card">
+        <h2 style="font-size:0.95rem;">NPC esistenti</h2>
+        <span class="field-hint">Clicca su un NPC per modificarlo.</span>
+        <div class="game-list" id="config-npc-list"></div>
+      </div>
+      <div class="royal-card">
+        <h2 id="config-npc-form-title" style="font-size:0.95rem;">+ Nuovo NPC</h2>
+        <div id="config-npc-alert"></div>
+        <div class="field">
+          <label for="config-npc-name">Nome</label>
+          <input type="text" id="config-npc-name" placeholder="Giovanni">
+        </div>
+        <div class="field">
+          <label for="config-npc-slug">ID interno (facoltativo)</label>
+          <input type="text" id="config-npc-slug" placeholder="generato automaticamente, es. npc_giovanni">
+          <span class="field-hint">È quello che l'IA userà per far comparire questo NPC nella scena.</span>
+        </div>
+        <div class="field">
+          <label for="config-npc-desc">Descrizione</label>
+          <textarea id="config-npc-desc"></textarea>
+        </div>
+        <div class="field">
+          <label for="config-npc-image">Immagine (URL)</label>
+          <input type="text" id="config-npc-image" placeholder="assets/npcs/giovanni.png">
+        </div>
+        <div class="field">
+          <label for="config-npc-fallback">Immagine di riserva (URL, facoltativa)</label>
+          <input type="text" id="config-npc-fallback" placeholder="assets/npcs/generico.png">
+          <span class="field-hint">Usata solo se l'immagine principale manca o non si carica.</span>
+        </div>
+        <div class="field">
+          <label><input type="checkbox" id="config-npc-hostile"> Ostile (nemico)</label>
+        </div>
+        <div class="field" id="config-npc-hp-field" style="display:none;">
+          <label for="config-npc-hp">HP</label>
+          <input type="text" id="config-npc-hp" value="10">
+        </div>
+        <div class="field">
+          <label>Location associate</label>
+          <div class="game-list" id="config-npc-locations-checklist"></div>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn btn-primary" id="btn-save-config-npc">Salva NPC</button>
+          <button class="btn-quiet" id="btn-cancel-config-npc" style="display:none;">✕ Annulla modifica</button>
+          <button class="btn-quiet" id="btn-delete-config-npc" style="display:none; color:var(--wine-bright);">🗑️ Elimina</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-close-row"><button class="btn" data-close-modal="modal-configure">Chiudi</button></div>
+  </div>
+</div>
+
+
+<div class="modal-overlay" id="modal-audio">
+  <div class="modal-box">
+    <h2>🔊 Suoni</h2>
+    <div class="field">
+      <label><input type="checkbox" id="audio-music-toggle"> Musica d'ambiente</label>
+    </div>
+    <div class="field">
+      <label for="audio-music-volume">Volume musica</label>
+      <input type="range" min="0" max="1" step="0.05" id="audio-music-volume">
+    </div>
+    <div class="field">
+      <label for="audio-sfx-volume">Volume effetti</label>
+      <input type="range" min="0" max="1" step="0.05" id="audio-sfx-volume">
+    </div>
+    <div class="modal-close-row"><button class="btn" data-close-modal="modal-audio">Chiudi</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-inventory">
+  <div class="modal-box modal-box-wide">
+    <h2>🎒 Sacche dei viandanti</h2>
+    <div id="inventory-content"></div>
+    <div class="modal-close-row"><button class="btn" data-close-modal="modal-inventory">Chiudi</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-dashboard">
+  <div class="modal-box modal-box-wide">
+    <h2>📊 Dashboard del gruppo</h2>
+    <div id="dashboard-content"></div>
+    <div class="modal-close-row"><button class="btn" data-close-modal="modal-dashboard">Chiudi</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-levelup">
+  <div class="modal-box">
+    <h2>🎉 Livello superiore!</h2>
+    <p class="field-hint" id="levelup-subtitle">Scegli su quale statistica investire il punto abilità.</p>
+    <div id="levelup-content"></div>
+    <div class="modal-close-row"><button class="btn" data-close-modal="modal-levelup">Chiudi</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-chronicle">
+  <div class="modal-box">
+    <h2>📖 Cronaca dell'avventura</h2>
+    <div id="chronicle-content"></div>
+    <div class="modal-close-row"><button class="btn" data-close-modal="modal-chronicle">Chiudi</button></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="audio.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

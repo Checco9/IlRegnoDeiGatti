@@ -1,0 +1,10 @@
+{
+  "name": "gdr-gatti",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Il Regno dei Gatti — avvio rapido di backend e frontend insieme.",
+  "type": "module",
+  "scripts": {
+    "start": "node start.js"
+  }
+}

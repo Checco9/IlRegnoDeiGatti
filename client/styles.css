@@ -1,0 +1,851 @@
+/* =========================================================
+   IL REGNO DEI GATTI — sistema di design
+   Palette: sala del trono di notte (viola-nerofumo) + oro invecchiato
+   + pergamena. Il rosso vino segna vita/pericolo.
+   Tipografia: Cinzel (inciso, per titoli e nomi) + Crimson Pro
+   (lettura lunga, per la narrazione).
+   ========================================================= */
+
+:root {
+  --void: #150b1e;
+  --plum: #241531;
+  --plum-light: #2f1c3f;
+  --parchment: #efe3c8;
+  --parchment-shadow: #d9c7a0;
+  --ink: #2a1b12;
+  --gold: #c9a227;
+  --gold-bright: #e8c158;
+  --wine: #7a2340;
+  --wine-bright: #a13456;
+
+  --font-display: 'Cinzel', 'Trajan Pro', serif;
+  --font-body: 'Crimson Pro', 'Iowan Old Style', Georgia, serif;
+
+  --radius-page: 3px;
+  --radius-ui: 6px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--void);
+  color: var(--parchment);
+  font-family: var(--font-body);
+  font-size: 17px;
+}
+
+body {
+  background-image:
+    radial-gradient(ellipse at top, rgba(201, 162, 39, 0.08), transparent 55%),
+    radial-gradient(ellipse at bottom, rgba(122, 35, 64, 0.10), transparent 60%);
+  background-attachment: fixed;
+}
+
+h1, h2, h3, .display {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  margin: 0;
+  color: var(--gold-bright);
+}
+
+button {
+  font-family: var(--font-display);
+  cursor: pointer;
+}
+
+a { color: var(--gold-bright); }
+
+::selection { background: var(--gold); color: var(--ink); }
+
+*:focus-visible {
+  outline: 2px solid var(--gold-bright);
+  outline-offset: 2px;
+}
+
+.app-shell {
+  max-width: 760px;
+  margin: 0 auto;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.screen { display: none; flex-direction: column; flex: 1; }
+.screen.active { display: flex; }
+
+/* ---------------------------------------------------------
+   Intestazione ornamentale (presente su ogni schermata)
+   --------------------------------------------------------- */
+.crest-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 22px 24px 14px;
+}
+
+.crest-header .crown-mark { font-size: 1.2em; margin-right: 8px; }
+
+.crest-header h1 { font-size: 1.35rem; flex: 1; min-width: 0; }
+
+.fame-badge {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  color: var(--gold-bright);
+  background: var(--plum-light);
+  border: 1px solid var(--gold);
+  border-radius: 999px;
+  padding: 4px 12px;
+  white-space: nowrap;
+  cursor: default;
+}
+.fame-badge.fame-good { border-color: #8fbf6b; color: #8fbf6b; }
+.fame-badge.fame-bad { border-color: var(--wine-bright); color: var(--wine-bright); }
+
+/* ---------------------------------------------------------
+   Dashboard del gruppo
+   --------------------------------------------------------- */
+.dashboard-card {
+  background: var(--plum-light);
+  border: 1px solid #46304f;
+  border-radius: var(--radius-ui);
+  padding: 14px;
+  margin-bottom: 14px;
+}
+.dashboard-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.dashboard-card-header .medallion { width: 44px; height: 44px; font-size: 1.1rem; }
+
+.stat-bar-row {
+  display: grid;
+  grid-template-columns: 70px 1fr 60px;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  margin-bottom: 6px;
+}
+.stat-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: #1c1224;
+  overflow: hidden;
+}
+.stat-bar-fill { height: 100%; border-radius: 999px; }
+.hp-fill { background: linear-gradient(90deg, var(--wine-bright), #d95a7a); }
+.energy-fill { background: linear-gradient(90deg, #4a8fd6, #6fb5f0); }
+.xp-fill { background: linear-gradient(90deg, var(--gold), var(--gold-bright)); }
+
+.dashboard-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: var(--parchment-shadow);
+  margin: 8px 0;
+}
+
+.levelup-stat-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  margin-bottom: 8px;
+}
+.levelup-stat-value { color: var(--gold-bright); }
+
+/* ---------------------------------------------------------
+   Slot di equipaggiamento nella Sacca
+   --------------------------------------------------------- */
+.equip-slots { display: flex; gap: 10px; flex-wrap: wrap; margin: 8px 0 12px; }
+.equip-slot {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--plum-light);
+  border: 1px solid var(--gold);
+  border-radius: var(--radius-ui);
+  padding: 6px 10px;
+  font-size: 0.82rem;
+}
+.equip-slot-label { font-family: var(--font-display); color: var(--gold-bright); }
+.equip-slot-empty { color: var(--parchment-shadow); font-style: italic; }
+.inventory-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: 0.9rem; padding: 4px 0; }
+
+.crest-rule {
+  height: 2px;
+  margin: 0 24px 18px;
+  background: linear-gradient(90deg, transparent, var(--gold) 15%, var(--gold) 85%, transparent);
+  opacity: 0.7;
+}
+
+/* ---------------------------------------------------------
+   Componenti generici (bottoni, campi, avvisi)
+   --------------------------------------------------------- */
+.btn {
+  font-size: 0.95rem;
+  padding: 10px 20px;
+  border-radius: var(--radius-ui);
+  border: 1px solid var(--gold);
+  background: transparent;
+  color: var(--gold-bright);
+  letter-spacing: 0.03em;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.btn:hover { background: var(--gold); color: var(--ink); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.btn-primary {
+  background: var(--gold);
+  color: var(--ink);
+}
+.btn-primary:hover { background: var(--gold-bright); }
+
+.btn-quiet {
+  border-color: transparent;
+  color: var(--parchment-shadow);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  padding: 6px 10px;
+}
+.btn-quiet:hover { background: var(--plum-light); color: var(--parchment); }
+
+.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.field label { font-family: var(--font-display); font-size: 0.82rem; color: var(--gold); }
+.field input[type="text"],
+.field input[type="email"],
+.field input[type="password"],
+.field textarea,
+.field select {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  padding: 10px 12px;
+  background: var(--plum-light);
+  border: 1px solid #46304f;
+  border-radius: var(--radius-ui);
+  color: var(--parchment);
+}
+.field textarea { resize: vertical; min-height: 64px; }
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--gold); }
+
+.field-hint { font-size: 0.78rem; color: var(--parchment-shadow); }
+
+.appearance-row { display: flex; gap: 14px; align-items: flex-start; margin-top: 8px; }
+.appearance-preview { flex: 0 0 auto; }
+.appearance-selects { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.appearance-selects select {
+  font-family: var(--font-body);
+  background: var(--plum-light);
+  border: 1px solid #46304f;
+  color: var(--parchment);
+  border-radius: var(--radius-ui);
+  padding: 8px 10px;
+}
+
+/* medaglioni composti (FASE 3): pelo come sfondo, occhi come puntino, */
+/* vestiti come colore del bordo, arma/accessorio come piccoli distintivi */
+.medallion, .figure-avatar { position: relative; }
+.cat-eye-dot {
+  position: absolute;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  bottom: 30%; left: 50%;
+  transform: translateX(-50%);
+  box-shadow: 0 0 2px rgba(0,0,0,0.7);
+}
+.cat-badge {
+  position: absolute;
+  font-size: 0.7em;
+  line-height: 1;
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.7));
+}
+.cat-badge-weapon { bottom: -3px; right: -3px; }
+.cat-badge-accessory { top: -3px; right: -3px; }
+
+.stat-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.stat-row label { flex: 0 0 90px; }
+.stat-row input[type="range"] { flex: 1; accent-color: var(--gold); }
+.stat-value { font-family: var(--font-display); color: var(--gold-bright); min-width: 1.5em; text-align: right; }
+
+.alert {
+  padding: 12px 16px;
+  border-radius: var(--radius-ui);
+  border: 1px solid var(--wine-bright);
+  background: rgba(122, 35, 64, 0.25);
+  color: var(--parchment);
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+}
+.alert-info {
+  border-color: var(--gold);
+  background: rgba(201, 162, 39, 0.15);
+}
+
+.spinner-line {
+  font-family: var(--font-display);
+  color: var(--gold-bright);
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+/* ---------------------------------------------------------
+   Schermata: autenticazione / home / lista
+   --------------------------------------------------------- */
+.center-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 24px;
+  gap: 22px;
+}
+
+.royal-card {
+  background: var(--plum);
+  border: 1px solid var(--gold);
+  border-radius: var(--radius-page);
+  padding: 28px 26px;
+}
+
+.royal-card h2 { margin-bottom: 18px; font-size: 1.15rem; }
+
+.home-menu { display: flex; flex-direction: column; gap: 12px; }
+.home-menu .btn { text-align: left; font-size: 1.05rem; padding: 16px 20px; }
+
+.game-list { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
+.game-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--plum-light);
+  border-radius: var(--radius-ui);
+  border: 1px solid #46304f;
+}
+.game-list-item:hover { border-color: var(--gold); cursor: pointer; }
+.game-list-item .title { font-family: var(--font-display); font-size: 0.95rem; }
+.game-list-item .meta { font-size: 0.78rem; color: var(--parchment-shadow); }
+
+/* Wizard a step */
+.wizard-steps { display: flex; gap: 6px; margin-bottom: 20px; }
+.wizard-dot {
+  flex: 1;
+  height: 3px;
+  background: #46304f;
+  border-radius: 2px;
+}
+.wizard-dot.done { background: var(--gold); }
+
+.tone-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tone-option {
+  padding: 14px;
+  border: 1px solid #46304f;
+  border-radius: var(--radius-ui);
+  background: var(--plum-light);
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+}
+.tone-option.selected { border-color: var(--gold); background: rgba(201,162,39,0.15); color: var(--gold-bright); }
+
+.char-pick-list { display: flex; flex-direction: column; gap: 8px; }
+.char-pick-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid #46304f;
+  border-radius: var(--radius-ui);
+  background: var(--plum-light);
+}
+.char-pick-item.selected { border-color: var(--gold); }
+
+/* ---------------------------------------------------------
+   Schermata di gioco
+   --------------------------------------------------------- */
+.game-toolbar {
+  display: flex;
+  gap: 8px;
+  padding: 0 24px 12px;
+  flex-wrap: wrap;
+}
+
+/* ---------------------------------------------------------
+   Scena visiva: sfondo del luogo + personaggi/NPC in scena
+   (FASE 1-2: nessun nuovo sistema, solo immagini già presenti
+   su characters.avatar_url / npcs.avatar_url / locations.image_url)
+   --------------------------------------------------------- */
+.scene-stage {
+  margin: 0 24px 14px;
+  border-radius: var(--radius-page);
+  border: 2px solid var(--gold);
+  position: relative;
+  min-height: 190px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  background-size: cover;
+  background-position: center;
+  background-color: var(--plum);
+  transition: background-image 0.6s ease;
+}
+.scene-stage::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(10,5,15,0.78) 0%, rgba(10,5,15,0.2) 55%, transparent 100%);
+  pointer-events: none;
+}
+.scene-stage.scene-fade-in { animation: sceneFadeIn 0.6s ease; }
+@keyframes sceneFadeIn {
+  from { opacity: 0.3; }
+  to { opacity: 1; }
+}
+
+.scene-location-label {
+  position: absolute;
+  top: 10px; left: 14px;
+  z-index: 1;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  color: var(--gold-bright);
+  text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+  letter-spacing: 0.03em;
+}
+
+.scene-figures {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 18px;
+  padding: 14px;
+}
+
+.scene-figure { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.scene-figure .figure-avatar {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  border: 2px solid var(--gold);
+  background: var(--plum-light);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  color: var(--gold-bright);
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+}
+.scene-figure.hostile .figure-avatar { border-color: var(--wine-bright); box-shadow: 0 0 10px rgba(122,35,64,0.65); }
+.scene-figure .figure-name {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  color: var(--parchment);
+  text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+}
+.scene-figure {
+  opacity: 0;
+  animation: figurePopIn 0.45s ease forwards;
+}
+@keyframes figurePopIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.92); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ---------------------------------------------------------
+   Pannello informazioni NPC (click su una figura in scena)
+   --------------------------------------------------------- */
+.scene-info-panel {
+  margin: 0 24px 14px;
+  padding: 10px 14px;
+  background: var(--plum-light);
+  border: 1px solid var(--gold);
+  border-radius: var(--radius-ui);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+.scene-info-panel div + div { margin-top: 2px; }
+
+/* ---------------------------------------------------------
+   FASE 5 — minimappa (non tattica, riusa i dati della mappa)
+   --------------------------------------------------------- */
+.minimap-panel {
+  margin: 0 24px 14px;
+  padding: 12px 14px;
+  background: var(--plum);
+  border: 1px solid var(--gold);
+  border-radius: var(--radius-page);
+}
+.minimap-current {
+  font-family: var(--font-display);
+  color: var(--gold-bright);
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+}
+.minimap-connections { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 6px; }
+.minimap-chip {
+  border: 1px solid var(--gold);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 0.82rem;
+}
+.minimap-chip:disabled { opacity: 0.5; cursor: not-allowed; }
+.minimap-others { font-size: 0.78rem; color: var(--parchment-shadow); }
+
+/* ---------------------------------------------------------
+   FASE 6 — overlay temporanei per eventi importanti
+   --------------------------------------------------------- */
+#scene-event-overlay-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  pointer-events: none;
+  padding-top: 14px;
+}
+.scene-event-banner {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  color: var(--void);
+  background: var(--gold-bright);
+  padding: 8px 18px;
+  border-radius: 999px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+  animation: bannerIn 0.4s ease;
+}
+.scene-event-banner-out { animation: bannerOut 0.5s ease forwards; }
+@keyframes bannerIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes bannerOut {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translateY(-10px); }
+}
+
+.story-frame {
+  margin: 0 24px 18px;
+  padding: 2px;
+  background: linear-gradient(135deg, var(--gold), #8a6f1c, var(--gold));
+  border-radius: var(--radius-page);
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.story-parchment {
+  background: var(--parchment);
+  color: var(--ink);
+  border-radius: 2px;
+  padding: 26px 28px;
+  flex: 1;
+  overflow-y: auto;
+  max-height: 46vh;
+  font-size: 1.05rem;
+  line-height: 1.65;
+}
+
+.story-entry { margin-bottom: 1.1em; max-width: 62ch; }
+.story-entry.player { color: #5a3d1a; font-style: italic; }
+.story-entry.roll { font-family: var(--font-display); font-size: 0.82rem; color: #8a6f1c; letter-spacing: 0.02em; }
+.story-entry.npc strong { color: var(--wine); }
+
+.roster-strip {
+  display: flex;
+  gap: 14px;
+  padding: 12px 24px;
+  overflow-x: auto;
+  border-top: 1px solid #3a2544;
+  border-bottom: 1px solid #3a2544;
+}
+
+.roster-card { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
+.medallion {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: var(--plum-light);
+  border: 2px solid var(--gold);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display);
+  color: var(--gold-bright);
+  font-size: 0.95rem;
+  overflow: hidden; /* FIX medaglioni: il cerchio ritaglia il contenuto, non lo lascia traboccare */
+}
+/* FIX medaglioni: prima le immagini non avevano NESSUNA regola di ridimensionamento
+   dentro .medallion (solo .figure-avatar della scena ce l'aveva). Un'unica regola
+   condivisa per entrambe le classi, così un gatto con proporzioni diverse si vede
+   sempre per intero, senza deformarsi e senza uscire dal cerchio. */
+.medallion img, .figure-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+.roster-info .name { font-family: var(--font-display); font-size: 0.88rem; }
+.roster-info .hp { font-size: 0.78rem; color: var(--parchment-shadow); }
+.roster-info .hp.low { color: var(--wine-bright); }
+
+.action-bar {
+  display: flex;
+  gap: 10px;
+  padding: 16px 24px 22px;
+  align-items: flex-end;
+}
+.action-bar .field { flex: 1; margin-bottom: 0; }
+.action-bar textarea { min-height: 46px; }
+
+/* ---------------------------------------------------------
+   Pannello azione: testo, prova opzionale, copia per IA
+   --------------------------------------------------------- */
+.action-panel { padding: 16px 24px 8px; display: flex; flex-direction: column; gap: 12px; }
+.action-panel textarea { min-height: 52px; }
+
+.roll-row { display: flex; flex-direction: column; gap: 10px; }
+
+/* Il dado: un rombo/diamante (suggerisce una faccia del d20) con il numero al
+   centro. Ruota con numeri casuali mentre "pensa", poi si ferma sul risultato
+   vero con un'animazione diversa per critico/successo/fallimento/fallimento critico. */
+.dice-widget { display: flex; align-items: center; gap: 12px; }
+.d20-shape {
+  width: 54px; height: 54px;
+  background: var(--plum-light);
+  border: 2px solid var(--gold);
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  color: var(--gold-bright);
+  flex-shrink: 0;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.d20-shape.spinning {
+  animation: diceSpin 0.5s linear infinite;
+  color: var(--parchment);
+  border-color: var(--parchment-shadow);
+}
+@keyframes diceSpin {
+  from { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(0.92); }
+  to { transform: rotate(360deg) scale(1); }
+}
+.d20-shape.result-success {
+  border-color: #8fbf6b;
+  box-shadow: 0 0 10px rgba(143,191,107,0.6);
+  animation: diceLandSuccess 0.4s ease;
+}
+.d20-shape.result-failure {
+  border-color: var(--wine-bright);
+  box-shadow: 0 0 10px rgba(122,35,64,0.6);
+  animation: diceShake 0.4s ease;
+}
+.d20-shape.result-crit-success {
+  border-color: var(--gold-bright);
+  box-shadow: 0 0 18px rgba(232,193,88,0.9);
+  animation: diceCritSuccess 0.6s ease;
+}
+.d20-shape.result-crit-failure {
+  border-color: #c23b3b;
+  box-shadow: 0 0 18px rgba(194,59,59,0.8);
+  animation: diceCritFailure 0.5s ease;
+}
+@keyframes diceLandSuccess {
+  0% { transform: scale(1.3); } 100% { transform: scale(1); }
+}
+@keyframes diceShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+@keyframes diceCritSuccess {
+  0% { transform: scale(1) rotate(0deg); }
+  40% { transform: scale(1.5) rotate(10deg); }
+  70% { transform: scale(1.15) rotate(-6deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+@keyframes diceCritFailure {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  20% { transform: translateX(-6px) rotate(-8deg); }
+  40% { transform: translateX(6px) rotate(8deg); }
+  60% { transform: translateX(-4px) rotate(-5deg); }
+  80% { transform: translateX(4px) rotate(5deg); }
+}
+.roll-outcome-label {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  color: var(--gold-bright);
+  min-height: 1.2em;
+}
+
+.roll-controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; flex: 1; }
+.roll-controls select {
+  font-family: var(--font-body);
+  background: var(--plum-light);
+  border: 1px solid #46304f;
+  color: var(--parchment);
+  border-radius: var(--radius-ui);
+  padding: 8px 10px;
+}
+.roll-result {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  color: var(--gold-bright);
+  min-height: 1.3em; /* riserva lo spazio anche da vuoto, per non far "saltare" il resto quando compare il testo */
+}
+.roll-result .success { color: #8fbf6b; }
+.roll-result .failure { color: var(--wine-bright); }
+
+/* ---------------------------------------------------------
+   Pannello importa modifiche
+   --------------------------------------------------------- */
+.import-panel { padding: 4px 24px 22px; }
+.import-panel textarea { min-height: 140px; }
+
+.change-list { display: flex; flex-direction: column; gap: 6px; margin: 12px 0; }
+.change-row {
+  padding: 8px 12px;
+  border-radius: var(--radius-ui);
+  background: var(--plum-light);
+  font-size: 0.88rem;
+  border-left: 3px solid var(--gold);
+}
+.change-row.invalid { border-left-color: var(--wine-bright); opacity: 0.85; }
+
+.import-narration {
+  background: var(--parchment);
+  color: var(--ink);
+  padding: 14px 16px;
+  border-radius: var(--radius-ui);
+  font-size: 0.95rem;
+  margin-bottom: 10px;
+}
+
+/* ---------------------------------------------------------
+   Mappa del Regno: vedi il blocco dedicato più sotto (grafo SVG)
+   --------------------------------------------------------- */
+
+/* ---------------------------------------------------------
+   Modali (mappa, sacca, cronaca)
+   --------------------------------------------------------- */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(10, 5, 15, 0.72);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 10;
+}
+.modal-overlay.active { display: flex; }
+
+.modal-box {
+  background: var(--plum);
+  border: 1px solid var(--gold);
+  border-radius: var(--radius-page);
+  max-width: 520px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 24px;
+}
+.modal-box h2 { margin-bottom: 14px; }
+.modal-box-wide { max-width: 860px; }
+.modal-close-row { display: flex; justify-content: flex-end; margin-top: 18px; }
+
+/* ---------------------------------------------------------
+   MAPPA DEL REGNO — grafo a nodi interattivo
+   --------------------------------------------------------- */
+.map-canvas-wrapper {
+  position: relative;
+  width: 100%;
+  height: 420px;
+  border: 1px solid var(--gold);
+  border-radius: var(--radius-ui);
+  background: radial-gradient(ellipse at center, var(--plum-light) 0%, var(--void) 100%);
+  overflow: hidden;
+  touch-action: none; /* i gesti (pan/pinch) li gestiamo a mano */
+  cursor: grab;
+}
+.map-canvas-wrapper:active { cursor: grabbing; }
+#map-svg { width: 100%; height: 100%; display: block; }
+
+.map-edge {
+  fill: none;
+  stroke: var(--gold);
+  stroke-width: 2;
+  opacity: 0.55;
+  stroke-linecap: round;
+}
+
+.map-node { cursor: pointer; }
+.map-node .node-card {
+  fill: var(--plum-light);
+  stroke: var(--gold);
+  stroke-width: 1.5;
+}
+.map-node.current .node-card { stroke: var(--gold-bright); stroke-width: 3; filter: drop-shadow(0 0 6px rgba(232,193,88,0.7)); }
+.map-node.undiscovered .node-card { fill: #1c1224; stroke-dasharray: 4 3; opacity: 0.75; }
+.map-node.fame-locked .node-card { stroke: var(--wine-bright); opacity: 0.6; }
+.map-node.fame-locked .node-label { fill: var(--wine-bright); }
+.map-node .node-label {
+  font-family: var(--font-display);
+  font-size: 12px;
+  fill: var(--parchment);
+}
+.map-node.undiscovered .node-label { fill: var(--parchment-shadow); }
+.map-node .node-crown { font-size: 16px; }
+.map-node.node-appear { animation: nodeAppear 0.4s ease; }
+@keyframes nodeAppear {
+  from { opacity: 0; transform: scale(0.6) translateY(-6px); }
+  to { opacity: 1; }
+}
+
+.map-node-info {
+  position: absolute;
+  left: 12px; bottom: 12px;
+  max-width: 260px;
+  background: var(--plum);
+  border: 1px solid var(--gold);
+  border-radius: var(--radius-ui);
+  padding: 10px 14px;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+}
+.map-info-actions { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+
+.map-zoom-controls {
+  position: absolute;
+  right: 10px; top: 10px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.map-zoom-controls button {
+  width: 30px; height: 30px;
+  padding: 0;
+  font-size: 0.9rem;
+}
+
+/* ---------------------------------------------------------
+   CONFIGURA — schede Location / NPC
+   --------------------------------------------------------- */
+.config-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+.config-tab { opacity: 0.6; }
+.config-tab.active { opacity: 1; background: var(--gold); color: var(--ink); }
+
+.inventory-owner { margin-bottom: 14px; }
+.inventory-owner .owner-name { font-family: var(--font-display); color: var(--gold-bright); margin-bottom: 6px; }
+
+.chronicle-chapter { margin-bottom: 18px; }
+.chronicle-chapter h3 { font-size: 1rem; margin-bottom: 6px; }
+.chronicle-chapter p { font-size: 0.9rem; color: var(--parchment-shadow); line-height: 1.5; }
+
+@media (max-width: 600px) {
+  .tone-grid { grid-template-columns: 1fr; }
+  .story-parchment { max-height: 40vh; padding: 20px; }
+  .crest-header h1 { font-size: 1.1rem; }
+  .scene-stage { min-height: 130px; }
+  .scene-figure .figure-avatar { width: 42px; height: 42px; font-size: 1rem; }
+  .appearance-selects { grid-template-columns: 1fr; }
+  .minimap-panel { margin: 0 14px 12px; }
+  .scene-event-banner { font-size: 0.82rem; padding: 6px 12px; text-align: center; }
+}

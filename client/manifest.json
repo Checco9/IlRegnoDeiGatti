@@ -1,0 +1,16 @@
+{
+  "name": "Il Regno dei Gatti",
+  "short_name": "Regno dei Gatti",
+  "description": "GDR narrativo di gatti con Game Master IA esterna: dadi, mappa, personaggi, tutto in un'unica app.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#150b1e",
+  "theme_color": "#150b1e",
+  "icons": [
+    { "src": "assets/ui/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/ui/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/ui/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
