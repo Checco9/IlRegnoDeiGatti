@@ -15,12 +15,12 @@
 // =========================================================
 window.APP_CONFIG = {
   // Supabase Dashboard -> Project Settings -> API -> Project URL
-  SUPABASE_URL: 'https://xxxxxxxx.supabase.co',
+  SUPABASE_URL: 'https://ddxoklvzobhnzhbajwov.supabase.co',
 
   // Supabase Dashboard -> Project Settings -> API -> anon public
-  SUPABASE_ANON_KEY: 'incolla-qui-la-anon-public-key',
+  SUPABASE_ANON_KEY: 'sb_publishable_lsro_8lTPuaNsHQmbYEOWQ_IN92_YjP',
 
   // In locale: 'http://localhost:3001/api'
   // Pubblicato:  'https://tuo-backend.onrender.com/api'
-  API_BASE_URL: 'http://localhost:3001/api',
+  API_BASE_URL: 'https://ilregnodeigatti.onrender.comapi',
 };
