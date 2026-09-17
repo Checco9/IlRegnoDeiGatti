@@ -19,6 +19,8 @@ import {
   equipItem,
   unequipItem,
   allocateSkillPoint,
+  filterCharacterIdsInGame,
+  characterBelongsToGame,
   addItemToInventory,
   consumeItem,
   moveToLocation,
@@ -155,6 +157,21 @@ router.post('/:gameId/apply-changes', requireGameMembership, async (req, res) =>
   if (!Array.isArray(changes)) return res.status(400).json({ error: 'Nessuna modifica da applicare.' });
 
   try {
+    // FIX SICUREZZA: prima di applicare qualunque modifica, verifica che ogni
+    // game_character_id citato appartenga DAVVERO a questa partita. Il client
+    // ci rimanda l'array "changes" così com'era, ma non ci fidiamo: potrebbe
+    // essere stato alterato a mano per puntare a un personaggio di un'altra
+    // partita a cui l'utente partecipa.
+    const referencedIds = changes
+      .filter((c) => c.valid && c.payload && c.payload.gameCharacterId)
+      .map((c) => c.payload.gameCharacterId);
+    const validCharacterIds = await filterCharacterIdsInGame(gameId, referencedIds);
+    changes.forEach((c) => {
+      if (c.valid && c.payload?.gameCharacterId && !validCharacterIds.has(c.payload.gameCharacterId)) {
+        c.valid = false; // neutralizzata: non appartiene a questa partita, verrà semplicemente ignorata
+      }
+    });
+
     if (narration?.trim()) {
       await appendEvent(gameId, { eventType: 'ai_narration', content: narration.trim() });
     }
@@ -262,11 +279,17 @@ router.post('/:gameId/inventory/:inventoryId/equip', requireGameMembership, asyn
   const { gameCharacterId, slot } = req.body;
   if (!gameCharacterId || !slot) return res.status(400).json({ error: 'gameCharacterId e slot sono obbligatori.' });
   try {
+    // FIX SICUREZZA: senza questo controllo, chiunque fosse membro di QUESTA
+    // partita poteva passare l'ID di un personaggio di un'ALTRA partita.
+    if (!(await characterBelongsToGame(req.params.gameId, gameCharacterId))) {
+      return res.status(403).json({ error: 'Questo personaggio non appartiene a questa partita.' });
+    }
     await equipItem(gameCharacterId, req.params.inventoryId, slot);
     const stato = await getCompactGameState(req.params.gameId);
     res.json({ ok: true, stato });
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    console.error('[actions] errore equip:', err);
+    res.status(400).json({ error: 'Impossibile equipaggiare l\'oggetto.' });
   }
 });
 
@@ -275,11 +298,15 @@ router.post('/:gameId/inventory/:inventoryId/unequip', requireGameMembership, as
   const { gameCharacterId } = req.body;
   if (!gameCharacterId) return res.status(400).json({ error: 'gameCharacterId obbligatorio.' });
   try {
+    if (!(await characterBelongsToGame(req.params.gameId, gameCharacterId))) {
+      return res.status(403).json({ error: 'Questo personaggio non appartiene a questa partita.' });
+    }
     await unequipItem(gameCharacterId, req.params.inventoryId);
     const stato = await getCompactGameState(req.params.gameId);
     res.json({ ok: true, stato });
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    console.error('[actions] errore unequip:', err);
+    res.status(400).json({ error: 'Impossibile togliere l\'equipaggiamento.' });
   }
 });
 
@@ -289,11 +316,15 @@ router.post('/:gameId/inventory/:inventoryId/unequip', requireGameMembership, as
 router.post('/:gameId/characters/:gameCharacterId/allocate-skill', requireGameMembership, async (req, res) => {
   const { stat } = req.body;
   try {
+    if (!(await characterBelongsToGame(req.params.gameId, req.params.gameCharacterId))) {
+      return res.status(403).json({ error: 'Questo personaggio non appartiene a questa partita.' });
+    }
     await allocateSkillPoint(req.params.gameCharacterId, stat);
     const stato = await getCompactGameState(req.params.gameId);
     res.json({ ok: true, stato });
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    console.error('[actions] errore assegnazione punto abilità:', err);
+    res.status(400).json({ error: err.message && err.message.includes('punto abilità') ? err.message : 'Impossibile assegnare il punto abilità.' });
   }
 });
 

@@ -525,7 +525,12 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Versione fissata (2.45.4, la stessa richiesta dal backend in server/package.json)
+     con hash di integrità: se il file su jsdelivr venisse mai alterato, il
+     browser si rifiuta di eseguirlo invece di caricare codice sconosciuto. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"
+        integrity="sha384-0w2KAL2YHP6wKOkUDzkCDGgVvfmHnj02DHeQ6XcHOgTfFsGyonKOpShMH1x6nk9o"
+        crossorigin="anonymous"></script>
 <script src="config.js"></script>
 <script src="audio.js"></script>
 <script src="app.js"></script>

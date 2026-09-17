@@ -30,7 +30,7 @@ router.get('/', async (req, res) => {
     .select('*')
     .eq('owner_id', req.user.id)
     .order('created_at', { ascending: false });
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) { console.error('[characters] errore lista:', error); return res.status(500).json({ error: 'Impossibile caricare i personaggi.' }); }
   res.json(data);
 });
 
@@ -62,7 +62,7 @@ router.post('/', async (req, res) => {
     .select('*')
     .single();
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) { console.error('[characters] errore creazione:', error); return res.status(500).json({ error: 'Impossibile creare il personaggio.' }); }
   res.status(201).json(data);
 });
 
@@ -114,7 +114,7 @@ router.put('/:id', async (req, res) => {
     .select('*')
     .single();
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) { console.error('[characters] errore modifica:', error); return res.status(500).json({ error: 'Impossibile modificare il personaggio.' }); }
   if (!data) return res.status(404).json({ error: 'Personaggio non trovato.' });
   res.json(data);
 });
@@ -126,7 +126,7 @@ router.delete('/:id', async (req, res) => {
     .delete()
     .eq('id', req.params.id)
     .eq('owner_id', req.user.id);
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) { console.error('[characters] errore eliminazione:', error); return res.status(500).json({ error: 'Impossibile eliminare il personaggio.' }); }
   res.status(204).send();
 });
 

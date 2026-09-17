@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { requireAuth, requireGameMembership } from '../middleware/auth.js';
+import { requireAuth, requireGameMembership, requireOwner } from '../middleware/auth.js';
 import { supabaseAdmin } from '../config/supabase.js';
 import { getCompactGameState, appendEvent, moveToLocation, connectLocations, ensureUniqueSlug, proposeInitialPosition } from '../services/gameStateService.js';
 import { buildPromptText } from '../services/aiBridge.js';
@@ -13,7 +13,7 @@ router.get('/', async (req, res) => {
     .from('game_players')
     .select('role, games(id, title, tone, status, created_at, last_active_at)')
     .eq('user_id', req.user.id);
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) { console.error('[games] errore lista partite:', error); return res.status(500).json({ error: 'Impossibile caricare le tue partite.' }); }
   res.json(data.map((row) => ({ ...row.games, role: row.role })));
 });
 
@@ -21,6 +21,7 @@ router.get('/', async (req, res) => {
 router.get('/:gameId', requireGameMembership, async (req, res) => {
   try {
     const state = await getCompactGameState(req.params.gameId);
+    state.mio_ruolo = req.gameRole; // 'proprietario' | 'giocatore' — usato dal frontend per mostrare/nascondere le azioni da master
     res.json(state);
   } catch (err) {
     console.error('[games] errore stato partita:', err);
@@ -48,6 +49,7 @@ router.post('/', async (req, res) => {
     const { data: chars, error: charsErr } = await supabaseAdmin
       .from('characters')
       .select('*')
+      .eq('owner_id', req.user.id) // FIX SICUREZZA: senza questo, chiunque poteva pescare la scheda di un personaggio altrui indovinandone l'ID
       .in('id', characterIds);
     if (charsErr) throw charsErr;
     if (!chars.length) return res.status(400).json({ error: 'Personaggi non trovati.' });
@@ -91,7 +93,7 @@ router.post('/', async (req, res) => {
     res.status(201).json({ game, promptText, stato: gameState });
   } catch (err) {
     console.error('[games] errore creazione partita:', err);
-    res.status(500).json({ error: err.message || 'Impossibile creare la partita.' });
+    res.status(500).json({ error: 'Impossibile creare la partita.' });
   }
 });
 
@@ -102,14 +104,14 @@ router.get('/:gameId/locations', requireGameMembership, async (req, res) => {
     .select('id, slug, name, description, image_url, music_url, discovered, connections, x, y, min_fame')
     .eq('game_id', req.params.gameId)
     .order('created_at', { ascending: true });
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) { console.error('[games] errore lista location:', error); return res.status(500).json({ error: 'Impossibile caricare i luoghi.' }); }
   res.json(data);
 });
 
 // POST /api/games/:gameId/locations — crea manualmente un nuovo luogo (Configura / Mappa)
 // body opzionale: connectedToLocationId → collega subito il nuovo luogo e ne propone
 // la posizione iniziale accanto a quello; senza, il nodo nasce al centro del canvas.
-router.post('/:gameId/locations', requireGameMembership, async (req, res) => {
+router.post('/:gameId/locations', requireGameMembership, requireOwner, async (req, res) => {
   const { name, description, image_url, music_url, discovered, connectedToLocationId, min_fame } = req.body;
   if (!name?.trim()) return res.status(400).json({ error: 'Il nome del luogo è obbligatorio.' });
 
@@ -141,12 +143,13 @@ router.post('/:gameId/locations', requireGameMembership, async (req, res) => {
 
     res.status(201).json(data);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[games] errore creazione location:', err);
+    res.status(500).json({ error: 'Impossibile creare il luogo.' });
   }
 });
 
 // PUT /api/games/:gameId/locations/:locationId — modifica un luogo (Configura / Mappa)
-router.put('/:gameId/locations/:locationId', requireGameMembership, async (req, res) => {
+router.put('/:gameId/locations/:locationId', requireGameMembership, requireOwner, async (req, res) => {
   const { name, description, image_url, music_url, discovered, slug, min_fame } = req.body;
   const updates = {};
   if (name !== undefined) updates.name = name.trim();
@@ -172,7 +175,8 @@ router.put('/:gameId/locations/:locationId', requireGameMembership, async (req, 
     if (error) throw error;
     res.json(data);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[games] errore modifica location:', err);
+    res.status(500).json({ error: 'Impossibile modificare il luogo.' });
   }
 });
 
@@ -188,23 +192,23 @@ router.put('/:gameId/locations/:locationId/position', requireGameMembership, asy
     .update({ x, y })
     .eq('id', req.params.locationId)
     .eq('game_id', req.params.gameId);
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) { console.error('[games] errore salvataggio posizione:', error); return res.status(500).json({ error: 'Impossibile salvare la posizione.' }); }
   res.json({ ok: true });
 });
 
 // DELETE /api/games/:gameId/locations/:locationId
-router.delete('/:gameId/locations/:locationId', requireGameMembership, async (req, res) => {
+router.delete('/:gameId/locations/:locationId', requireGameMembership, requireOwner, async (req, res) => {
   const { error } = await supabaseAdmin
     .from('locations')
     .delete()
     .eq('id', req.params.locationId)
     .eq('game_id', req.params.gameId);
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) { console.error('[games] errore eliminazione location:', error); return res.status(500).json({ error: 'Impossibile eliminare il luogo.' }); }
   res.status(204).send();
 });
 
 // POST /api/games/:gameId/locations/:locationId/connect — collega due luoghi sulla mappa
-router.post('/:gameId/locations/:locationId/connect', requireGameMembership, async (req, res) => {
+router.post('/:gameId/locations/:locationId/connect', requireGameMembership, requireOwner, async (req, res) => {
   const { targetLocationId, label } = req.body;
   if (!targetLocationId) return res.status(400).json({ error: 'targetLocationId obbligatorio.' });
 
@@ -212,7 +216,8 @@ router.post('/:gameId/locations/:locationId/connect', requireGameMembership, asy
     await connectLocations(req.params.gameId, req.params.locationId, targetLocationId, label || '');
     res.status(201).json({ ok: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[games] errore collegamento location:', err);
+    res.status(500).json({ error: 'Impossibile collegare i due luoghi.' });
   }
 });
 
@@ -256,7 +261,7 @@ router.post('/:gameId/travel', requireGameMembership, async (req, res) => {
     res.json({ ok: true, stato: state });
   } catch (err) {
     console.error('[games] errore viaggio:', err);
-    res.status(500).json({ error: err.message || 'Impossibile spostarsi.' });
+    res.status(500).json({ error: 'Impossibile spostarsi.' });
   }
 });
 
@@ -286,14 +291,14 @@ router.get('/:gameId/chronicle', requireGameMembership, async (req, res) => {
 });
 
 // POST /api/games/:gameId/invite — aggiunge un secondo giocatore (semplice, no inviti via email)
-router.post('/:gameId/invite', requireGameMembership, async (req, res) => {
+router.post('/:gameId/invite', requireGameMembership, requireOwner, async (req, res) => {
   const { userId } = req.body;
   if (!userId) return res.status(400).json({ error: 'userId obbligatorio.' });
 
   const { error } = await supabaseAdmin
     .from('game_players')
     .insert({ game_id: req.params.gameId, user_id: userId, role: 'giocatore' });
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) { console.error('[games] errore invito:', error); return res.status(500).json({ error: 'Impossibile invitare questo utente.' }); }
   res.status(201).json({ ok: true });
 });
 

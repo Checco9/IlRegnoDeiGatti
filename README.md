@@ -695,6 +695,68 @@ Il backend accetta chiamate solo dall'indirizzo in `CLIENT_ORIGIN`. Su
 Render → Environment → `CLIENT_ORIGIN` deve contenere l'indirizzo Netlify
 esatto, **senza slash finale** (es. `https://gdr-gatti.netlify.app`).
 
+## 15. Fix di sicurezza (da una revisione esterna)
+
+Una revisione del codice ha trovato alcuni problemi reali, corretti in
+questa versione. Se avevi già pubblicato una versione precedente, **aggiorna
+sia backend che frontend** con questa release.
+
+### Critici — corretti
+
+- **Nessun controllo che gli oggetti citati appartenessero alla partita.**
+  `/apply-changes`, `/inventory/:id/equip`, `/inventory/:id/unequip` e
+  `/characters/:id/allocate-skill` controllavano solo che tu fossi membro
+  della partita nell'URL, ma non che il `gameCharacterId`/`inventoryId`
+  dentro il corpo della richiesta appartenesse DAVVERO a quella partita. Nel
+  flusso normale dell'interfaccia non si notava (gli ID arrivano sempre
+  corretti), ma chiamando le API a mano si poteva modificare HP/energia/
+  equipaggiamento di un personaggio di un'ALTRA partita a cui si partecipava.
+  Ora ogni personaggio citato viene riverificato contro `game_id` prima di
+  qualunque scrittura.
+- **Creazione partita senza controllo del proprietario dei personaggi.**
+  Si potevano passare ID di personaggi altrui e vederne la scheda (statistiche,
+  descrizione, personalità) dentro una partita mai accettata dal vero
+  proprietario. Aggiunto il filtro per `owner_id`.
+
+### Importanti — corretti
+
+- **Il ruolo proprietario/giocatore non contava nulla.** Chiunque fosse
+  invitato in una partita poteva invitare altre persone, creare/modificare/
+  eliminare luoghi e NPC in Configura, e leggere i campi degli NPC pensati
+  per restare segreti solo per il master (`known_secrets`,
+  `relationship_notes`). Ora queste azioni richiedono il ruolo
+  "proprietario"; chi non lo è vede Configura in sola lettura, e i due campi
+  segreti non vengono nemmeno mandati al browser di un giocatore semplice.
+
+### Altri miglioramenti
+
+- La libreria Supabase caricata da CDN ora è a **versione fissata** (2.45.4,
+  la stessa del backend) con **hash di integrità**: se quel file su jsDelivr
+  venisse mai alterato, il browser si rifiuta di eseguirlo.
+- I messaggi d'errore mostrati al browser sono ora generici
+  ("Impossibile creare il personaggio.") invece di inoltrare il testo grezzo
+  degli errori del database — l'errore vero resta comunque nei log del
+  server (`console.error`), utile per te in fase di debug ma non per un
+  possibile malintenzionato.
+- Aggiunto `client/_headers` per Netlify: una Content-Security-Policy di
+  base e altri header (`X-Frame-Options`, `Referrer-Policy`,
+  `Permissions-Policy`) che riducono i danni possibili se in futuro
+  venisse mai introdotta una falla XSS.
+
+### Non ancora fatto (non bloccante)
+
+- **Rate limiting** su azioni ripetibili (tiri, inviti, creazione
+  personaggi): non urgente per un gioco tra amici, ma economico da
+  aggiungere in futuro con un limitatore per IP davanti a `/api`.
+- Esegui **`npm audit`** dentro `server/` ogni tanto: alla stesura di
+  questa nota le dipendenze erano tutte aggiornate, ma è bene ricontrollare
+  periodicamente.
+- Le regole già solide confermate dalla revisione (da non toccare): Row
+  Level Security attiva su tutte le tabelle, testo dei giocatori sempre
+  escapato prima di finire nella pagina, il parser delle risposte dell'IA
+  tratta il testo incollato come non fidato e valida ogni modifica contro
+  lo stato reale, i token JWT vengono verificati lato server.
+
 ## Semplificazioni note (per le prossime fasi)
 
 - La "Cronaca" mostra i capitoli riassunti già salvati (quando esisteranno)

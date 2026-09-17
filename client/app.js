@@ -1419,6 +1419,15 @@ document.getElementById('btn-open-configure').addEventListener('click', () => op
 async function openConfigureModal(tab = 'locations') {
   document.getElementById('modal-configure').classList.add('active');
   switchConfigTab(tab);
+
+  const isOwner = state.currentGameState?.mio_ruolo === 'proprietario';
+  state.isGameOwner = isOwner;
+  ['btn-save-config-location', 'btn-delete-config-location', 'btn-connect-existing-location', 'btn-save-config-npc', 'btn-delete-config-npc']
+    .forEach((id) => { document.getElementById(id).disabled = !isOwner; });
+  const notice = 'Solo chi ha creato la partita può creare, modificare o eliminare location e NPC. Puoi comunque consultarli.';
+  showAlert('config-location-alert', isOwner ? '' : notice, 'info');
+  showAlert('config-npc-alert', isOwner ? '' : notice, 'info');
+
   await loadConfigLocations();
   await loadConfigNpcs();
 }

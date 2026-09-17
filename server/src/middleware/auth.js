@@ -52,3 +52,19 @@ export async function requireGameMembership(req, res, next) {
     res.status(500).json({ error: 'Errore interno durante il controllo dei permessi.' });
   }
 }
+
+/**
+ * Verifica che l'utente sia il PROPRIETARIO (il "master") della partita, non
+ * un semplice giocatore invitato. Da usare DOPO requireGameMembership, per
+ * le azioni riservate a chi ha creato l'avventura: invitare altri giocatori,
+ * creare/modificare/eliminare luoghi e NPC in Configura. Senza questo
+ * controllo, qualunque giocatore invitato poteva fare tutto ciò che poteva
+ * fare il proprietario, inclusa la lettura dei segreti degli NPC pensati
+ * per restare visibili solo al master.
+ */
+export function requireOwner(req, res, next) {
+  if (req.gameRole !== 'proprietario') {
+    return res.status(403).json({ error: 'Solo chi ha creato la partita può farlo.' });
+  }
+  next();
+}

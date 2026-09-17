@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { requireAuth, requireGameMembership } from '../middleware/auth.js';
+import { requireAuth, requireGameMembership, requireOwner } from '../middleware/auth.js';
 import { supabaseAdmin } from '../config/supabase.js';
 import { ensureUniqueSlug } from '../services/gameStateService.js';
 
@@ -9,6 +9,8 @@ router.use(requireAuth);
 // GET /api/games/:gameId/npcs — tutti gli NPC della partita, con i luoghi associati
 // (per la sezione "Configura"; la lista degli NPC PRESENTI in scena resta invece
 // quella già esposta dentro lo stato compatto della partita).
+// Aperta a tutti i membri (serve anche ai giocatori per vedere gli NPC), ma
+// chi non è proprietario non riceve i campi pensati come segreti del master.
 router.get('/:gameId/npcs', requireGameMembership, async (req, res) => {
   try {
     const { data: npcs, error } = await supabaseAdmin
@@ -33,16 +35,27 @@ router.get('/:gameId/npcs', requireGameMembership, async (req, res) => {
       }, {});
     }
 
-    res.json(npcs.map((n) => ({ ...n, associatedLocationIds: associationsByNpc[n.id] || [] })));
+    const isOwner = req.gameRole === 'proprietario';
+    res.json(npcs.map((n) => {
+      const payload = { ...n, associatedLocationIds: associationsByNpc[n.id] || [] };
+      // FIX SICUREZZA: known_secrets e relationship_notes sono pensati per
+      // restare visibili solo al master (proprietario). Prima venivano
+      // mandati a chiunque fosse membro della partita, in chiaro.
+      if (!isOwner) {
+        delete payload.known_secrets;
+        delete payload.relationship_notes;
+      }
+      return payload;
+    }));
   } catch (err) {
     console.error('[npcs] errore lista:', err);
     res.status(500).json({ error: 'Impossibile caricare gli NPC.' });
   }
 });
 
-// POST /api/games/:gameId/npcs — crea un NPC dalla sezione Configura
+// POST /api/games/:gameId/npcs — crea un NPC dalla sezione Configura (solo il proprietario)
 // body: { name, description, imageUrl, fallbackImage, isHostile, hp, associatedLocationIds: [] }
-router.post('/:gameId/npcs', requireGameMembership, async (req, res) => {
+router.post('/:gameId/npcs', requireGameMembership, requireOwner, async (req, res) => {
   const { name, description, imageUrl, fallbackImage, isHostile, hp, associatedLocationIds } = req.body;
   if (!name?.trim()) return res.status(400).json({ error: 'Il nome dell\'NPC è obbligatorio.' });
 
@@ -75,12 +88,12 @@ router.post('/:gameId/npcs', requireGameMembership, async (req, res) => {
     res.status(201).json({ ...npc, associatedLocationIds: associatedLocationIds || [] });
   } catch (err) {
     console.error('[npcs] errore creazione:', err);
-    res.status(500).json({ error: err.message || 'Impossibile creare l\'NPC.' });
+    res.status(500).json({ error: 'Impossibile creare l\'NPC.' });
   }
 });
 
-// PUT /api/games/:gameId/npcs/:npcId — modifica un NPC (Configura)
-router.put('/:gameId/npcs/:npcId', requireGameMembership, async (req, res) => {
+// PUT /api/games/:gameId/npcs/:npcId — modifica un NPC (Configura, solo il proprietario)
+router.put('/:gameId/npcs/:npcId', requireGameMembership, requireOwner, async (req, res) => {
   const { name, description, imageUrl, fallbackImage, isHostile, hp, slug, associatedLocationIds } = req.body;
   const updates = {};
   if (name !== undefined) updates.name = name.trim();
@@ -116,18 +129,21 @@ router.put('/:gameId/npcs/:npcId', requireGameMembership, async (req, res) => {
     res.json({ ...npc, associatedLocationIds: associatedLocationIds || [] });
   } catch (err) {
     console.error('[npcs] errore modifica:', err);
-    res.status(500).json({ error: err.message || 'Impossibile modificare l\'NPC.' });
+    res.status(500).json({ error: 'Impossibile modificare l\'NPC.' });
   }
 });
 
-// DELETE /api/games/:gameId/npcs/:npcId
-router.delete('/:gameId/npcs/:npcId', requireGameMembership, async (req, res) => {
+// DELETE /api/games/:gameId/npcs/:npcId — solo il proprietario
+router.delete('/:gameId/npcs/:npcId', requireGameMembership, requireOwner, async (req, res) => {
   const { error } = await supabaseAdmin
     .from('npcs')
     .delete()
     .eq('id', req.params.npcId)
     .eq('game_id', req.params.gameId);
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) {
+    console.error('[npcs] errore eliminazione:', error);
+    return res.status(500).json({ error: 'Impossibile eliminare l\'NPC.' });
+  }
   res.status(204).send();
 });
 

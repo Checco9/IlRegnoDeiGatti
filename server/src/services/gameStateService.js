@@ -254,6 +254,36 @@ export async function allocateSkillPoint(gameCharacterId, stat) {
 // =========================================================
 // EQUIPAGGIAMENTO — un oggetto per slot per personaggio
 // =========================================================
+/**
+ * FIX SICUREZZA: verifica che uno o più game_character_id appartengano
+ * DAVVERO alla partita indicata, prima di applicare qualunque modifica.
+ * Senza questo controllo, chiunque fosse membro di UNA partita qualsiasi
+ * poteva mandare al backend l'ID di un personaggio di un'ALTRA partita
+ * (es. vista in precedenza) e modificarne HP/energia/inventario a piacere:
+ * requireGameMembership da solo controlla solo l'appartenenza alla partita
+ * nell'URL, non che gli oggetti citati nel corpo della richiesta siano
+ * davvero di quella partita.
+ * Restituisce l'insieme (Set) degli id che appartengono davvero alla partita.
+ */
+export async function filterCharacterIdsInGame(gameId, gameCharacterIds) {
+  const ids = [...new Set(gameCharacterIds.filter(Boolean))];
+  if (!ids.length) return new Set();
+  const { data, error } = await supabaseAdmin
+    .from('game_characters')
+    .select('id')
+    .eq('game_id', gameId)
+    .in('id', ids);
+  if (error) throw error;
+  return new Set(data.map((r) => r.id));
+}
+
+/** Come sopra, ma per un singolo id: true/false. */
+export async function characterBelongsToGame(gameId, gameCharacterId) {
+  if (!gameCharacterId) return false;
+  const set = await filterCharacterIdsInGame(gameId, [gameCharacterId]);
+  return set.has(gameCharacterId);
+}
+
 export const EQUIPMENT_SLOTS = ['armatura', 'amuleto'];
 
 /** Equipaggia un oggetto della sacca in uno slot, liberando automaticamente ciò che c'era prima lì. */

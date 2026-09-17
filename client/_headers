@@ -1,0 +1,24 @@
+# =========================================================
+# Header di sicurezza letti automaticamente da Netlify (nessuna
+# configurazione aggiuntiva richiesta, basta che questo file sia
+# nella cartella pubblicata, cioè client/).
+#
+# NOTE sulla Content-Security-Policy:
+# - script-src e style-src includono 'unsafe-inline' perché l'app usa
+#   alcuni attributi inline (style="display:none" generati da JS, un
+#   gestore onerror su alcune immagini per il fallback all'iniziale del
+#   nome). Non è la CSP più stretta possibile, ma limita comunque gli
+#   script a se stesso + jsDelivr, bloccando qualunque script remoto
+#   iniettato da una fonte diversa: la protezione principale contro XSS
+#   "importa codice da un altro dominio" resta intatta.
+# - connect-src include https://*.onrender.com perché il backend può
+#   girare su un sottodominio Render diverso per ogni installazione di
+#   questo progetto. Se usi un altro host per il backend, aggiorna anche
+#   qui il dominio giusto.
+# =========================================================
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; img-src 'self' data: https:; font-src https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co https://*.onrender.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), microphone=(), camera=()
