@@ -21,6 +21,18 @@
 </head>
 <body>
 
+<!-- ============ CARICAMENTO (rotella a tema gatto) ============ -->
+<!-- Attiva di default: si nasconde da sola non appena l'app sa se mostrare
+     login o corte. Copre in particolare il primo "risveglio" del backend
+     su hosting gratuito, che può metterci fino a un minuto. -->
+<div class="loading-overlay active" id="loading-overlay">
+  <div class="loading-cat">🐱</div>
+  <div class="loading-paws">
+    <span class="paw">🐾</span><span class="paw">🐾</span><span class="paw">🐾</span>
+  </div>
+  <div class="loading-caption" id="loading-caption">Il Regno si sveglia...</div>
+</div>
+
 <div class="app-shell">
 
   <!-- ============ AUTENTICAZIONE ============ -->

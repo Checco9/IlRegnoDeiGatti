@@ -101,6 +101,7 @@ document.getElementById('btn-login').addEventListener('click', async () => {
   const email = document.getElementById('auth-email').value.trim();
   const password = document.getElementById('auth-password').value;
   showAlert('auth-alert', '');
+  showLoadingOverlay();
   try {
     const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
     if (error) throw error;
@@ -108,6 +109,8 @@ document.getElementById('btn-login').addEventListener('click', async () => {
     await enterKingdom();
   } catch (err) {
     showAlert('auth-alert', err.message);
+  } finally {
+    hideLoadingOverlay();
   }
 });
 
@@ -115,6 +118,7 @@ document.getElementById('btn-signup').addEventListener('click', async () => {
   const email = document.getElementById('auth-email').value.trim();
   const password = document.getElementById('auth-password').value;
   showAlert('auth-alert', '');
+  showLoadingOverlay();
   try {
     const { data, error } = await supabaseClient.auth.signUp({ email, password });
     if (error) throw error;
@@ -126,6 +130,8 @@ document.getElementById('btn-signup').addEventListener('click', async () => {
     }
   } catch (err) {
     showAlert('auth-alert', err.message);
+  } finally {
+    hideLoadingOverlay();
   }
 });
 
@@ -1920,12 +1926,54 @@ if ('serviceWorker' in navigator) {
 }
 
 // ---------------------------------------------------------
+// Rotella di caricamento a tema gatto
+// ---------------------------------------------------------
+const LOADING_MESSAGES = [
+  'Il Regno si sveglia...',
+  'Il maggiordomo-gatto si stiracchia...',
+  'Si spolvera il trono...',
+  'Si riscaldano le zampe...',
+  'Quasi pronti a fare le fusa...',
+];
+let loadingCaptionTimer = null;
+
+function showLoadingOverlay() {
+  const overlay = document.getElementById('loading-overlay');
+  const caption = document.getElementById('loading-caption');
+  overlay.classList.remove('fading-out');
+  overlay.classList.add('active');
+  let i = 0;
+  caption.textContent = LOADING_MESSAGES[0];
+  if (loadingCaptionTimer) clearInterval(loadingCaptionTimer);
+  loadingCaptionTimer = setInterval(() => {
+    i = (i + 1) % LOADING_MESSAGES.length;
+    caption.classList.add('fade-out');
+    setTimeout(() => {
+      caption.textContent = LOADING_MESSAGES[i];
+      caption.classList.remove('fade-out');
+    }, 250);
+  }, 2400);
+}
+
+function hideLoadingOverlay() {
+  const overlay = document.getElementById('loading-overlay');
+  overlay.classList.add('fading-out');
+  setTimeout(() => overlay.classList.remove('active', 'fading-out'), 400);
+  if (loadingCaptionTimer) { clearInterval(loadingCaptionTimer); loadingCaptionTimer = null; }
+}
+
+// ---------------------------------------------------------
 // Avvio: se c'è già una sessione Supabase valida, entra subito
 // ---------------------------------------------------------
 (async function init() {
-  const { data } = await supabaseClient.auth.getSession();
-  if (data.session) {
-    state.session = data.session;
-    await enterKingdom();
+  showLoadingOverlay(); // già attiva di default nell'HTML, qui avvia anche le didascalie
+  try {
+    const { data } = await supabaseClient.auth.getSession();
+    if (data.session) {
+      state.session = data.session;
+      await enterKingdom();
+    }
+  } finally {
+    hideLoadingOverlay();
   }
 })();

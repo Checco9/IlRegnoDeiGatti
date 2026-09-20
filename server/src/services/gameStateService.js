@@ -95,7 +95,12 @@ export async function getCompactGameState(gameId) {
       };
     }),
     npc_presenti: (npcs.data || [])
-      .filter((n) => n.status === 'attivo' && (!currentLocation || n.location_id === currentLocation.id))
+      // FIX: prima, se il luogo attuale non era determinabile (es. cancellato
+      // da Configura), "!currentLocation" era vero e faceva passare TUTTI gli
+      // NPC attivi, indipendentemente da dove si trovassero davvero — è quello
+      // che causava la comparsa casuale di NPC mai citati dall'IA. Ora, senza
+      // un luogo attuale certo, semplicemente nessun NPC risulta "in scena".
+      .filter((n) => n.status === 'attivo' && currentLocation && n.location_id === currentLocation.id)
       .map((n) => ({
         id: n.id,
         slug: n.slug,

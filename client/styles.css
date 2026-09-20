@@ -65,6 +65,60 @@ a { color: var(--gold-bright); }
   outline-offset: 2px;
 }
 
+/* ---------------------------------------------------------
+   Rotella di caricamento a tema gatto — coperta soprattutto per il
+   "risveglio" del backend su hosting gratuito (può metterci fino a un minuto)
+   --------------------------------------------------------- */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: var(--void);
+  background-image: radial-gradient(ellipse at center, rgba(201, 162, 39, 0.08), transparent 60%);
+  opacity: 1;
+  transition: opacity 0.4s ease;
+}
+.loading-overlay.active { display: flex; }
+.loading-overlay.fading-out { opacity: 0; pointer-events: none; }
+
+.loading-cat {
+  font-size: 3.2rem;
+  animation: loadingCatBounce 1.1s ease-in-out infinite;
+}
+@keyframes loadingCatBounce {
+  0%, 100% { transform: translateY(0) rotate(-4deg); }
+  50% { transform: translateY(-14px) rotate(4deg); }
+}
+
+.loading-paws { display: flex; gap: 10px; }
+.loading-paws .paw {
+  font-size: 1.3rem;
+  opacity: 0.25;
+  animation: loadingPawPulse 1.2s ease-in-out infinite;
+}
+.loading-paws .paw:nth-child(1) { animation-delay: 0s; }
+.loading-paws .paw:nth-child(2) { animation-delay: 0.2s; }
+.loading-paws .paw:nth-child(3) { animation-delay: 0.4s; }
+@keyframes loadingPawPulse {
+  0%, 60%, 100% { opacity: 0.25; transform: scale(0.9); }
+  30% { opacity: 1; transform: scale(1.15); }
+}
+
+.loading-caption {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  color: var(--gold-bright);
+  letter-spacing: 0.03em;
+  min-height: 1.3em;
+  transition: opacity 0.25s ease;
+}
+.loading-caption.fade-out { opacity: 0; }
+
 .app-shell {
   max-width: 760px;
   margin: 0 auto;

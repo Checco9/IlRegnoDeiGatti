@@ -757,6 +757,43 @@ sia backend che frontend** con questa release.
   tratta il testo incollato come non fidato e valida ogni modifica contro
   lo stato reale, i token JWT vengono verificati lato server.
 
+## 16. Rotella di caricamento e correzione NPC casuali
+
+### 🐱 Rotella di caricamento
+
+Un gattino che sobbalza + tre zampette che si illuminano in sequenza,
+compare da solo all'avvio dell'app (utile soprattutto per il primo
+"risveglio" del backend su Render, che può metterci fino a un minuto) e
+durante login/registrazione. Le didascalie sotto cambiano ogni paio di
+secondi ("Il Regno si sveglia...", "Il maggiordomo-gatto si stiracchia...",
+ecc.). Nessun asset esterno: solo emoji e CSS.
+
+### Bug corretto: NPC che comparivano senza che l'IA li avesse mai citati
+
+Causa trovata: nel calcolo dello stato della partita, se il luogo attuale
+non era determinabile (**caso tipico: era stato eliminato da Configura**,
+oppure per qualunque altro motivo `current_location_id` era rimasto vuoto),
+il filtro "quali NPC sono nella scena" aveva una condizione che — invece di
+non mostrare nessuno, per prudenza — mostrava **tutti** gli NPC attivi
+della partita, indipendentemente da dove si trovassero davvero. Gli NPC
+creati in Configura non hanno una posizione finché l'IA non li cita per la
+prima volta (giustamente), quindi con quel bug finivano tutti in scena
+insieme.
+
+Corretto in tre punti, per sicurezza:
+1. Il filtro ora, senza un luogo attuale certo, non mostra nessun NPC
+   (comportamento sicuro) invece di mostrarli tutti.
+2. **Non è più possibile eliminare il luogo in cui si trova attualmente il
+   gruppo** da Configura — va prevenuto alla radice, così questa situazione
+   non si può più ricreare.
+3. Se nonostante tutto una partita restasse senza un luogo attuale (es. da
+   prima di questo fix), il pulsante "🐾 Vai qui" ora funziona comunque per
+   "ripartire" da un luogo qualsiasi, invece di restare bloccati.
+
+Se la tua avventura in corso ha ancora questo problema: apri 🗺️ Mappa e
+prova "🐾 Vai qui" su un qualunque luogo per riassegnare una posizione
+attuale valida — da quel momento il filtro tornerà a funzionare come deve.
+
 ## Semplificazioni note (per le prossime fasi)
 
 - La "Cronaca" mostra i capitoli riassunti già salvati (quando esisteranno)

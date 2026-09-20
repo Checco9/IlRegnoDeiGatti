@@ -198,6 +198,25 @@ router.put('/:gameId/locations/:locationId/position', requireGameMembership, asy
 
 // DELETE /api/games/:gameId/locations/:locationId
 router.delete('/:gameId/locations/:locationId', requireGameMembership, requireOwner, async (req, res) => {
+  // FIX: impedisce di eliminare il luogo in cui si trova ATTUALMENTE il
+  // gruppo. Prima si poteva, e la partita restava con "current_location_id"
+  // nullo: oltre a rompere la scena visiva, causava anche la comparsa
+  // casuale di NPC non pertinenti (vedi il fix nel filtro npc_presenti).
+  const { data: game, error: gameErr } = await supabaseAdmin
+    .from('games')
+    .select('current_location_id')
+    .eq('id', req.params.gameId)
+    .single();
+  if (gameErr) {
+    console.error('[games] errore controllo luogo attuale:', gameErr);
+    return res.status(500).json({ error: 'Impossibile eliminare il luogo.' });
+  }
+  if (game.current_location_id === req.params.locationId) {
+    return res.status(400).json({
+      error: 'Non puoi eliminare il luogo in cui si trova attualmente il gruppo. Spostati altrove prima di eliminarlo.',
+    });
+  }
+
   const { error } = await supabaseAdmin
     .from('locations')
     .delete()
@@ -234,14 +253,20 @@ router.post('/:gameId/travel', requireGameMembership, async (req, res) => {
       .single();
     if (gameErr) throw gameErr;
 
-    const { data: current, error: curErr } = await supabaseAdmin
-      .from('locations')
-      .select('connections')
-      .eq('id', game.current_location_id)
-      .single();
-    if (curErr) throw curErr;
-
-    const connected = (current.connections || []).some((c) => c.to === targetLocationId);
+    // FIX: se il luogo attuale è nullo (es. era stato eliminato prima della
+    // protezione aggiunta sopra), non c'è nessun collegamento da verificare:
+    // il gruppo può "ripartire" da un luogo qualsiasi invece di restare
+    // bloccato per sempre senza possibilità di viaggiare.
+    let connected = true;
+    if (game.current_location_id) {
+      const { data: current, error: curErr } = await supabaseAdmin
+        .from('locations')
+        .select('connections')
+        .eq('id', game.current_location_id)
+        .single();
+      if (curErr) throw curErr;
+      connected = (current.connections || []).some((c) => c.to === targetLocationId);
+    }
     if (!connected) {
       return res.status(400).json({ error: 'Questo luogo non è collegato alla posizione attuale sulla mappa.' });
     }
